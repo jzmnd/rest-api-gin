@@ -23,7 +23,7 @@ type Env struct {
 }
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	dbpool := dbConnect(ctx)
@@ -72,7 +72,10 @@ func handlePing(c *gin.Context) {
 
 // handleGetAlbums responds with the list of all albums as JSON.
 func (env *Env) handleGetAlbums(c *gin.Context) {
-	albums, err := env.Albums.GetAll(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	albums, err := env.Albums.GetAll(ctx)
 	if err != nil {
 		c.IndentedJSON(
 			http.StatusInternalServerError,
@@ -85,6 +88,9 @@ func (env *Env) handleGetAlbums(c *gin.Context) {
 
 // handlePostAlbums adds an album from JSON received in the request body.
 func (env *Env) handlePostAlbums(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
 	var a models.Album
 
 	// Call BindJSON to bind the received JSON to a new Album.
@@ -98,13 +104,16 @@ func (env *Env) handlePostAlbums(c *gin.Context) {
 	// Ignore ID since it is auto-incremented by the database.
 	a.ID = ""
 
-	env.Albums.Insert(context.Background(), a)
+	env.Albums.Insert(ctx, a)
 	c.IndentedJSON(http.StatusCreated, a)
 }
 
 // handleGetAlbumByID locates the album whose ID value matches the id
 // parameter sent by the client, then returns that album as a response.
 func (env *Env) handleGetAlbumByID(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.IndentedJSON(
@@ -113,7 +122,7 @@ func (env *Env) handleGetAlbumByID(c *gin.Context) {
 		)
 		return
 	}
-	album, err := env.Albums.GetByID(context.Background(), id)
+	album, err := env.Albums.GetByID(ctx, id)
 	if err != nil {
 		c.IndentedJSON(
 			http.StatusNotFound,
