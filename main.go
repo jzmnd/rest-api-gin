@@ -15,7 +15,11 @@ import (
 )
 
 type Env struct {
-	Albums models.AlbumModel
+	Albums interface {
+		GetAll(context.Context) ([]models.Album, error)
+		GetByID(context.Context, int) (*models.Album, error)
+		Insert(context.Context, models.Album) error
+	}
 }
 
 func main() {
